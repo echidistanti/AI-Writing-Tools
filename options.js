@@ -712,3 +712,77 @@ async function saveApiSettings() {
   State.apiKey = apiKey;
   State.selectedModel = model;
 }
+
+// --- EXPORT SETTINGS ---
+document.getElementById('exportSettings').addEventListener('click', async () => {
+  const now = new Date();
+  const pad = n => n.toString().padStart(2, '0');
+  const fileName = `ai_writing_tools_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+
+  const data = await chrome.storage.sync.get([
+    'apiEndpoint',
+    'apiKey',
+    'selectedModel',
+    'availableModels',
+    'customPrompts'
+  ]);
+
+  const exportData = {
+    apiEndpoint: data.apiEndpoint || '',
+    apiKey: data.apiKey || '',
+    selectedModel: data.selectedModel || '',
+    availableModels: data.availableModels || [],
+    prompts: data.customPrompts || []
+  };
+
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+});
+
+// --- IMPORT SETTINGS ---
+document.getElementById('importSettings').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+
+      await chrome.storage.sync.set({
+        apiEndpoint: imported.apiEndpoint || '',
+        apiKey: imported.apiKey || '',
+        selectedModel: imported.selectedModel || '',
+        availableModels: imported.availableModels || [],
+        customPrompts: imported.prompts || []
+      });
+
+      // Aggiorna lo stato e la UI
+      State.apiEndpoint = imported.apiEndpoint || '';
+      State.apiKey = imported.apiKey || '';
+      State.selectedModel = imported.selectedModel || '';
+      State.availableModels = imported.availableModels || [];
+      State.setPrompts(imported.prompts || []);
+      await loadSettings();
+
+      alert('Settings imported successfully!');
+    } catch (err) {
+      alert('Error importing settings: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+});
