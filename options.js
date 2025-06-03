@@ -5,7 +5,59 @@ const State = {
 };
 
 // Funzione per aggiornare la tabella dei prompt (dummy)
-function updatePromptsTable() {}
+function updatePromptsTable() {
+    const tbody = document.querySelector('#promptsTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    State.prompts.forEach((prompt, idx) => {
+        const tr = document.createElement('tr');
+
+        // Nome (input)
+        const tdName = document.createElement('td');
+        const inputName = document.createElement('input');
+        inputName.type = 'text';
+        inputName.value = prompt.name || '';
+        inputName.className = 'prompt-name-input';
+        inputName.addEventListener('input', (e) => {
+            State.prompts[idx].name = e.target.value;
+            State.hasUnsavedChanges = true;
+            updateSaveButtonState();
+        });
+        tdName.appendChild(inputName);
+        tr.appendChild(tdName);
+
+        // Prompt (input)
+        const tdPrompt = document.createElement('td');
+        const inputPrompt = document.createElement('input');
+        inputPrompt.type = 'text';
+        inputPrompt.value = prompt.prompt || '';
+        inputPrompt.className = 'prompt-text-input';
+        inputPrompt.addEventListener('input', (e) => {
+            State.prompts[idx].prompt = e.target.value;
+            State.hasUnsavedChanges = true;
+            updateSaveButtonState();
+        });
+        tdPrompt.appendChild(inputPrompt);
+        tr.appendChild(tdPrompt);
+
+        // Azioni
+        const tdActions = document.createElement('td');
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.className = 'button delete';
+        deleteBtn.type = 'button';
+        deleteBtn.addEventListener('click', () => {
+            State.prompts.splice(idx, 1);
+            State.hasUnsavedChanges = true;
+            updatePromptsTable();
+            updateSaveButtonState();
+        });
+        tdActions.appendChild(deleteBtn);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+    });
+}
 
 // Funzione per aggiornare lo stato del pulsante save
 function updateSaveButtonState() {
@@ -72,6 +124,8 @@ async function importSettings(event) {
         State.hasUnsavedChanges = true;
         updateSaveButtonState();
         showSaveStatus('Settings imported successfully');
+        // Salva subito su chrome.storage.sync
+        await saveAllSettings();
     } catch (error) {
         alert('Import failed: ' + error.message);
     }
@@ -80,10 +134,20 @@ async function importSettings(event) {
 
 // Funzione per salvare tutte le impostazioni
 async function saveAllSettings() {
-    // Qui puoi aggiungere il salvataggio su chrome.storage.sync se necessario
-    State.hasUnsavedChanges = false;
-    updateSaveButtonState();
-    showSaveStatus('✅ Settings saved successfully');
+    try {
+        await chrome.storage.sync.set({
+            apiEndpoint: document.getElementById('apiEndpoint').value,
+            apiKey: document.getElementById('apiKey').value,
+            selectedModel: document.getElementById('selectedModel').value,
+            customPrompts: State.prompts
+        });
+        State.hasUnsavedChanges = false;
+        updateSaveButtonState();
+        showSaveStatus('✅ Settings saved successfully');
+    } catch (error) {
+        showSaveStatus('❌ Error saving settings');
+        console.error(error);
+    }
 }
 
 // Funzione per testare la connessione
@@ -120,6 +184,29 @@ async function testConnection() {
     }
 }
 
+// Funzione per caricare le impostazioni
+async function loadSettings() {
+    try {
+        const result = await chrome.storage.sync.get([
+            'apiEndpoint',
+            'apiKey',
+            'selectedModel',
+            'customPrompts'
+        ]);
+        // Aggiorna i campi input
+        if (result.apiEndpoint) document.getElementById('apiEndpoint').value = result.apiEndpoint;
+        if (result.apiKey) document.getElementById('apiKey').value = result.apiKey;
+        if (result.selectedModel) document.getElementById('selectedModel').value = result.selectedModel;
+        // Aggiorna i prompt
+        State.prompts = Array.isArray(result.customPrompts) ? result.customPrompts : [];
+        updatePromptsTable();
+        State.hasUnsavedChanges = false;
+        updateSaveButtonState();
+    } catch (error) {
+        console.error('Errore nel caricamento delle impostazioni:', error);
+    }
+}
+
 // Setup degli event listener
 function setupEventListeners() {
     document.getElementById('checkConnection')?.addEventListener('click', testConnection);
@@ -141,10 +228,11 @@ function setupEventListeners() {
 }
 
 // Inizializzazione
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadSettings();
     setupEventListeners();
-    updateSaveButtonState();
-    updatePromptsTable();
+    // updateSaveButtonState(); // già chiamato in loadSettings
+    // updatePromptsTable();    // già chiamato in loadSettings
 });
 
 // Confirm before leaving with unsaved changes
