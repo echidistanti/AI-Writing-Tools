@@ -19,12 +19,11 @@
                     <input type="password" id="apiKey" placeholder="Enter your API key" required>
                 </div>
 
-                <button id="loadModels" class="button" type="button">Load Available Models</button>
+                <label for="selectedModel">Model:</label>
+                <input type="text" id="selectedModel" placeholder="Enter model name">
                 
-                <label for="modelSelect">Model:</label>
-                <select id="modelSelect">
-                    <option value="">First load available models</option>
-                </select>
+                <button id="checkConnection" class="button secondary" type="button">🔌 Check Connection</button>
+                <div id="connectionStatus" class="connection-status"></div>
             </div>
         </div>
 
@@ -41,10 +40,12 @@
                 <tbody></tbody>
             </table>
             <div class="button-group">
-                <button id="addPrompt" class="button" type="button">Add Prompt</button>
-                <button id="savePrompts" class="button" type="button">Save Changes</button>
-                <button id="exportSettings" class="button" type="button">Export Settings</button>
-                <button id="importSettings" class="button" type="button">Import Settings</button>
+                <button id="addPrompt" class="button primary" type="button">Add Prompt</button>
+                <div class="right-aligned-buttons">
+                    <button id="savePrompts" class="button" type="button">💾 Save Settings</button>
+                    <button id="exportSettings" class="button" type="button">📤 Export</button>
+                    <button id="importSettings" class="button" type="button">📥 Import</button>
+                </div>
                 <input type="file" id="importFile" style="display:none" accept=".json">
                 <span id="saveStatus" class="save-status"></span>
             </div>

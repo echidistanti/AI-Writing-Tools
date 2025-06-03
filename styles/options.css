@@ -65,6 +65,9 @@ h2 {
   position: relative;
   margin-bottom: 20px;
   max-width: var(--max-form-width);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 label {
@@ -118,8 +121,33 @@ select:focus {
 
 .button-group {
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 20px;
+}
+
+.right-aligned-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.button.primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.button.primary:hover {
+  background-color: #0056b3;
+}
+
+.button.secondary {
+  background-color: #6c757d;
+  color: white;
+  margin-top: 10px;
+}
+
+.button.secondary:hover {
+  background-color: #5a6268;
 }
 
 /* Table styles */
@@ -329,19 +357,21 @@ select:focus {
 }
 
 .connection-status {
-  margin-top: 8px;
-  padding: 8px;
+  margin-top: 10px;
+  padding: 10px;
   border-radius: 4px;
-  font-size: 14px;
+  display: none;
 }
 
 .connection-status.success {
+  display: block;
   background-color: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
 }
 
 .connection-status.error {
+  display: block;
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
@@ -364,4 +394,13 @@ select:focus {
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 100%;
+}
+
+/* Input per il modello selezionato */
+#selectedModel {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
