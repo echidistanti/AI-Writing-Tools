@@ -147,10 +147,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 function buildChatCompletionsUrl(apiEndpoint) {
-  // Rimuovi slash finale e /v1 finale se presenti
   let base = apiEndpoint.trim().replace(/\/+$/, '');
-  base = base.replace(/\/v1$/, '');
-  return `${base}/v1/chat/completions`;
+  return `${base}/chat/completions`;
 }
 
 // Process text with the configured API
