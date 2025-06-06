@@ -13,8 +13,6 @@ To use AI Writing Tools, simply select text on any webpage and access the extens
 - **Custom Text Processing**: Create and manage custom prompts to process selected text in any way you need
 - **Contextual Menu Integration**: Right-click on any selected text to access your custom prompts
 - **Interactive Chat**: Engage in a conversation about the processed text with the AI assistant
-- **Floating Window Interface**: Drag, resize, and interact with results in a modern floating window
-- **Dark Mode Support**: Seamless experience in both light and dark themes
 - **Settings Management**: Export and import your settings and prompts for backup or sharing
 
 ## 🚀 Getting Started
