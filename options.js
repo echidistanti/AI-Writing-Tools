@@ -43,14 +43,16 @@ function updatePromptsTable() {
         // Azioni
         const tdActions = document.createElement('td');
         const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '🗑️';
+        deleteBtn.textContent = 'Delete';
         deleteBtn.className = 'button delete';
         deleteBtn.type = 'button';
         deleteBtn.addEventListener('click', () => {
-            State.prompts.splice(idx, 1);
-            State.hasUnsavedChanges = true;
-            updatePromptsTable();
-            updateSaveButtonState();
+            if (confirm(`Are you sure you want to delete the prompt "${prompt.name}"?`)) {
+                State.prompts.splice(idx, 1);
+                State.hasUnsavedChanges = true;
+                updatePromptsTable();
+                updateSaveButtonState();
+            }
         });
         tdActions.appendChild(deleteBtn);
         tr.appendChild(tdActions);
