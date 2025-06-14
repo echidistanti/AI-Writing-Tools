@@ -148,7 +148,8 @@ select:focus,
 .tab-button.active {
   background: var(--background-primary);
   color: var(--accent-color);
-  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+  /* Remove box-shadow from active tab */
+  box-shadow: none;
   border-bottom: 3px solid var(--background-primary);
   z-index: 3;
 }
