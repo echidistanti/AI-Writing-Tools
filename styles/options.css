@@ -422,3 +422,36 @@ select:focus {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+/* Tabs styles */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 4px 4px 0 0;
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: background 0.2s, border-bottom 0.2s;
+}
+
+.tab-button.active {
+  background: var(--background-primary);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}

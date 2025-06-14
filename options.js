@@ -96,6 +96,7 @@ async function exportSettings() {
         apiEndpoint: document.getElementById('apiEndpoint').value,
         apiKey: document.getElementById('apiKey').value,
         selectedModel: document.getElementById('selectedModel').value,
+        temperature: parseFloat(document.getElementById('temperature').value) || 1,
         customPrompts: State.prompts
     };
     const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
@@ -119,6 +120,7 @@ async function importSettings(event) {
         if (settings.apiEndpoint) document.getElementById('apiEndpoint').value = settings.apiEndpoint;
         if (settings.apiKey) document.getElementById('apiKey').value = settings.apiKey;
         if (settings.selectedModel) document.getElementById('selectedModel').value = settings.selectedModel;
+        if (settings.temperature !== undefined) document.getElementById('temperature').value = settings.temperature;
         if (Array.isArray(settings.customPrompts)) {
             State.prompts = settings.customPrompts;
             updatePromptsTable();
@@ -141,6 +143,7 @@ async function saveAllSettings() {
             apiEndpoint: document.getElementById('apiEndpoint').value,
             apiKey: document.getElementById('apiKey').value,
             selectedModel: document.getElementById('selectedModel').value,
+            temperature: parseFloat(document.getElementById('temperature').value) || 1,
             customPrompts: State.prompts
         });
         State.hasUnsavedChanges = false;
@@ -193,12 +196,15 @@ async function loadSettings() {
             'apiEndpoint',
             'apiKey',
             'selectedModel',
+            'temperature',
             'customPrompts'
         ]);
         // Aggiorna i campi input
         if (result.apiEndpoint) document.getElementById('apiEndpoint').value = result.apiEndpoint;
         if (result.apiKey) document.getElementById('apiKey').value = result.apiKey;
         if (result.selectedModel) document.getElementById('selectedModel').value = result.selectedModel;
+        if (result.temperature !== undefined) document.getElementById('temperature').value = result.temperature;
+        else document.getElementById('temperature').value = 1;
         // Aggiorna i prompt
         State.prompts = Array.isArray(result.customPrompts) ? result.customPrompts : [];
         updatePromptsTable();
@@ -208,6 +214,21 @@ async function loadSettings() {
         console.error('Errore nel caricamento delle impostazioni:', error);
     }
 }
+
+// Tab switching logic
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadSettings();
+    setupEventListeners();
+    // Tab logic
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab).classList.add('active');
+        });
+    });
+});
 
 // Setup degli event listener
 function setupEventListeners() {
@@ -221,7 +242,7 @@ function setupEventListeners() {
     document.getElementById('importFile')?.addEventListener('change', importSettings);
 
     // Cambiamenti nei campi input
-    ['apiEndpoint', 'apiKey', 'selectedModel'].forEach(id => {
+    ['apiEndpoint', 'apiKey', 'selectedModel', 'temperature'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () => {
             State.hasUnsavedChanges = true;
             updateSaveButtonState();
