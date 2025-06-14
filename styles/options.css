@@ -303,26 +303,15 @@ select:focus {
 
 .prompt-row.dragging {
   opacity: 0.5;
-  background: var(--background-secondary);
 }
 
 .prompt-row .drag-handle {
   cursor: grab;
-  padding: 8px;
+  margin-right: 10px;
+  font-size: 18px;
   color: var(--text-secondary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.prompt-row .drag-handle:active {
-  cursor: grabbing;
-}
-
-.prompt-row .drag-handle::before {
-  content: "⋮⋮";
-  font-size: 16px;
-  line-height: 1;
+  user-select: none;
+  vertical-align: middle;
 }
 
 .prompt-row.drop-target {
@@ -454,4 +443,18 @@ select:focus {
 
 .tab-content.active {
   display: block;
+}
+
+/* Prompt text area */
+.prompt-text-input {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  font-size: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-background);
+  color: var(--text-primary);
+  box-sizing: border-box;
 }

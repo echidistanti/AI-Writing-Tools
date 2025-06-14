@@ -11,6 +11,18 @@ function updatePromptsTable() {
     tbody.innerHTML = '';
     State.prompts.forEach((prompt, idx) => {
         const tr = document.createElement('tr');
+        tr.className = 'prompt-row';
+        tr.draggable = true;
+        tr.dataset.idx = idx;
+
+        // Drag handle (first cell)
+        const tdDrag = document.createElement('td');
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'drag-handle';
+        dragHandle.title = 'Drag to reorder';
+        dragHandle.innerHTML = '☰';
+        tdDrag.appendChild(dragHandle);
+        tr.appendChild(tdDrag);
 
         // Nome (input)
         const tdName = document.createElement('td');
@@ -26,18 +38,18 @@ function updatePromptsTable() {
         tdName.appendChild(inputName);
         tr.appendChild(tdName);
 
-        // Prompt (input)
+        // Prompt (textarea)
         const tdPrompt = document.createElement('td');
-        const inputPrompt = document.createElement('input');
-        inputPrompt.type = 'text';
-        inputPrompt.value = prompt.prompt || '';
-        inputPrompt.className = 'prompt-text-input';
-        inputPrompt.addEventListener('input', (e) => {
+        const textareaPrompt = document.createElement('textarea');
+        textareaPrompt.value = prompt.prompt || '';
+        textareaPrompt.className = 'prompt-text-input';
+        textareaPrompt.rows = 4;
+        textareaPrompt.addEventListener('input', (e) => {
             State.prompts[idx].prompt = e.target.value;
             State.hasUnsavedChanges = true;
             updateSaveButtonState();
         });
-        tdPrompt.appendChild(inputPrompt);
+        tdPrompt.appendChild(textareaPrompt);
         tr.appendChild(tdPrompt);
 
         // Azioni
@@ -56,6 +68,37 @@ function updatePromptsTable() {
         });
         tdActions.appendChild(deleteBtn);
         tr.appendChild(tdActions);
+
+        // Drag & drop events
+        tr.addEventListener('dragstart', (e) => {
+            tr.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', idx);
+        });
+        tr.addEventListener('dragend', () => {
+            tr.classList.remove('dragging');
+            document.querySelectorAll('.prompt-row').forEach(row => row.classList.remove('drop-target'));
+        });
+        tr.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            tr.classList.add('drop-target');
+        });
+        tr.addEventListener('dragleave', () => {
+            tr.classList.remove('drop-target');
+        });
+        tr.addEventListener('drop', (e) => {
+            e.preventDefault();
+            tr.classList.remove('drop-target');
+            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            const toIdx = idx;
+            if (fromIdx !== toIdx) {
+                const moved = State.prompts.splice(fromIdx, 1)[0];
+                State.prompts.splice(toIdx, 0, moved);
+                State.hasUnsavedChanges = true;
+                updatePromptsTable();
+                updateSaveButtonState();
+            }
+        });
 
         tbody.appendChild(tr);
     });
