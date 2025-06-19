@@ -24,18 +24,21 @@
   flex-direction: column !important;
   resize: both !important;
   overflow: hidden !important;
+  /* Light mode variables */
   --gpt-primary-color: #3B82F6;
-  --gpt-bg-color: #1F1F23;
-  --gpt-text-color: #E5E7EB;
-  --gpt-border-color: rgba(255, 255, 255, 0.1);
-  --gpt-bubble-bg: #2D2D35;
-  --gpt-bubble-text: #E5E7EB;
+  --gpt-bg-color: #ffffff;
+  --gpt-text-color: #333333;
+  --gpt-border-color: rgba(0, 0, 0, 0.1);
+  --gpt-bubble-bg: #f0f0f0;
+  --gpt-bubble-text: #333333;
   --gpt-user-bubble-bg: var(--gpt-primary-color);
   --gpt-user-bubble-text: #FFFFFF;
-  --gpt-input-bg: #2D2D35;
-  --gpt-input-text: #E5E7EB;
+  --gpt-input-bg: #ffffff;
+  --gpt-input-text: #333333;
   --gpt-timestamp-color: #6B7280;
   --gpt-placeholder-color: #9CA3AF;
+  --gpt-draghandle-bg: #f8f9fa;
+  --gpt-content-bg: #ffffff;
 }
 
 /* Reset per tutti gli elementi interni */
@@ -355,6 +358,41 @@
     background: #2d2d2d !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     color: #e0e0e0 !important;
+  }
+
+  .gpt-helper-result.dark-mode {
+    --gpt-bg-color: #1F1F23;
+    --gpt-text-color: #E5E7EB;
+    --gpt-border-color: rgba(255, 255, 255, 0.1);
+    --gpt-bubble-bg: #2D2D35;
+    --gpt-bubble-text: #E5E7EB;
+    --gpt-input-bg: #2D2D35;
+    --gpt-input-text: #E5E7EB;
+    --gpt-timestamp-color: #9CA3AF;
+    --gpt-placeholder-color: #6B7280;
+    --gpt-draghandle-bg: #2D2D35;
+    --gpt-content-bg: #1F1F23;
+  }
+
+  /* Applicazione delle variabili */
+  .gpt-helper-result {
+    background: var(--gpt-bg-color) !important;
+    color: var(--gpt-text-color) !important;
+  }
+
+  .gpt-helper-draghandle {
+    background: var(--gpt-draghandle-bg) !important;
+    border-bottom-color: var(--gpt-border-color) !important;
+  }
+
+  .gpt-helper-content {
+    background: var(--gpt-content-bg) !important;
+  }
+
+  .gpt-helper-textarea {
+    background: var(--gpt-input-bg) !important;
+    color: var(--gpt-input-text) !important;
+    border-color: var(--gpt-border-color) !important;
   }
 
   .gpt-helper-draghandle {

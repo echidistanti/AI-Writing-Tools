@@ -1,109 +1,47 @@
-# AI Writing Tools
+# AI Writing Tools for Chrome
 
-## Simplified Writing Assistance
+A Chrome extension that enhances your writing experience with AI assistance. Simply select text on any webpage and get instant AI-powered suggestions, analysis, and chat capabilities.
 
-AI Writing Tools is a Chrome extension that offers straightforward support for writing. Designed for ease of use, this extension provides helpful text analysis and suggestions directly within your browser.
+## Features
 
-To install the extension, download the project and load it as an unpacked extension in Chrome by enabling Developer Mode and selecting the project folder. Configure your API endpoint, API key, and custom prompts via the settings page once installed.
+- **Smart Text Processing**: Select any text and process it with custom AI prompts
+- **Contextual Menu Integration**: Right-click selected text to access AI features
+- **Interactive Chat**: Start conversations about the selected text with the AI
+- **Floating UI**: Non-intrusive floating window that stays on top of your content
+- **Dark Mode Support**: Automatically adapts to your system preferences
 
-To use AI Writing Tools, simply select text on any webpage and access the extension through the context menu. The extension will analyze the text and display the results directly in your browser.
+## Installation
 
-## 🌟 Key Features
+1. Clone this repository
+2. Open Chrome Extensions (`chrome://extensions/`)
+3. Enable "Developer mode"
+4. Click "Load unpacked" and select this folder
 
-- **Custom Text Processing**: Create and manage custom prompts to process selected text in any way you need
-- **Contextual Menu Integration**: Right-click on any selected text to access your custom prompts
-- **Interactive Chat**: Engage in a conversation about the processed text with the AI assistant
-- **Settings Management**: Export and import your settings and prompts for backup or sharing
+## Configuration
 
-## 🚀 Getting Started
+1. Click the extension icon
+2. Enter your OpenAI-compatible API endpoint and key
+3. Select your preferred AI model
+4. Create custom prompts for different use cases
 
-### Prerequisites
-- Google Chrome browser
-- API key for your chosen provider (OpenAI, Gemini via OpenAI-compatible proxy, Claude, etc.)
+## Usage
 
-### Installation
-1. Clone this repository or download the source code
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the extension directory
+1. Select text on any webpage
+2. Right-click and choose a prompt from the menu
+3. View results in the floating window
+4. Continue the conversation using the chat interface
 
-### Configuration
-1. Click the extension icon in your browser toolbar
-2. Open the settings page
-3. Configure your AI provider:
-   - Enter the API endpoint URL (must be OpenAI-compatible, e.g. `https://api.openai.com`)
-   - Enter your API key
-   - The available models will be automatically loaded
-4. Create your custom prompts
+## Technical Requirements
 
-> **Note:** For Gemini or Claude, you must use an OpenAI-compatible proxy endpoint. The official Gemini API is **not** directly compatible.
+- Chrome Browser
+- OpenAI API key or compatible endpoint (Gemini/Claude via proxy)
 
-## 💡 Usage
+## Privacy & Security
 
-1. **Process Text**:
-   - Select any text on a webpage
-   - Right-click to open the context menu
-   - Choose one of your custom prompts or use "Prompt on the Fly"
-   - View the processed result in the floating window
+- All processing happens through your personal API endpoint
+- No data stored on external servers
+- Credentials stored securely in Chrome's storage
 
-2. **Chat with AI**:
-   - After processing text, click the "Chat" button
-   - Ask questions or request modifications about the original or processed text
-   - Get instant AI-powered responses
+## License
 
-3. **Manage Prompts**:
-   - Open the settings page
-   - Add, edit, or delete custom prompts
-   - Drag and drop to reorder prompts
-   - Export/Import settings for backup
-
-## ⚙️ Features in Detail
-
-### AI Provider Configuration
-- Support for multiple AI providers using OpenAI-compatible API format
-- Compatible with:
-  - OpenAI
-  - Gemini (via OpenAI-compatible proxy)
-  - Anthropic Claude (via OpenAI-compatible proxy)
-  - Other OpenAI-compatible endpoints
-- Automatic model detection based on provider's API
-- Secure API key and endpoint storage
-
-### Custom Prompts
-Create prompts for various purposes:
-- Text summarization
-- Language translation
-- Grammar correction
-- Style transformation
-- Code explanation
-- And more...
-
-### Window Controls
-- Drag the window by its header
-- Resize from the bottom-right corner
-- Copy results with one click
-- Close with the ✖ button
-
-### Settings Management
-- Secure API key storage
-- Model selection
-- Prompt management
-- Import/Export functionality
-
-## 🔒 Privacy & Security
-
-- Your API credentials are stored securely in Chrome's storage
-- All processing is done through your configured AI provider
-- No data is stored on external servers
-- Settings can be exported/imported locally
-
-## 🤝 Contributing
-
-Feel free to:
-- Report bugs
-- Suggest features
-- Submit pull requests
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
