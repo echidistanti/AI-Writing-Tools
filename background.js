@@ -279,8 +279,8 @@ async function showAlert(tab, message) {
 
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
-  // Open options page instead of chat window
-  chrome.runtime.openOptionsPage();
+  // Instead of opening options page, show chat window
+  await showChatWindow(tab, '', '');
 });
 
 // Show loading window
