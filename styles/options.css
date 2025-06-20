@@ -17,14 +17,117 @@
 /* Dark mode colors */
 @media (prefers-color-scheme: dark) {
   :root {
-      --background-primary: #2d2d2d;
-      --background-secondary: #383838;
-      --border-color: rgba(255, 255, 255, 0.1);
-      --text-primary: #e0e0e0;
-      --text-secondary: #a0a0a0;
-      --accent-color: #43a047;
-      --accent-hover: #388e3c;
-      --input-background: #383838;
+    --background-primary: #23272b;
+    --background-secondary: #181a1b;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --accent-color: #43a047;
+    --accent-hover: #388e3c;
+    --input-background: #23272b;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+  }
+
+  body {
+    background-color: var(--background-secondary) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .container {
+    background: none !important;
+  }
+
+  .tab-content,
+  .section {
+    background: var(--background-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .tabs {
+    background: var(--background-secondary) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+  }
+
+  .tab-button {
+    background: var(--background-secondary) !important;
+    color: var(--text-secondary) !important;
+    border: none !important;
+  }
+
+  .tab-button.active {
+    background: var(--background-primary) !important;
+    color: var(--accent-color) !important;
+    border-bottom: 2px solid var(--background-primary) !important;
+    z-index: 3;
+  }
+
+  .tab-button:not(.active):hover {
+    background: #23272b !important;
+    color: var(--text-primary) !important;
+  }
+
+  .table th,
+  .table td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    background: none !important;
+  }
+
+  .table tr:hover {
+    background-color: #23272b !important;
+  }
+
+  .prompt-text-input,
+  input[type="text"],
+  input[type="password"],
+  input[type="url"],
+  input[type="number"],
+  select {
+    background-color: var(--input-background) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .prompt-text-input:focus,
+  input[type="text"]:focus,
+  input[type="password"]:focus,
+  input[type="url"]:focus,
+  input[type="number"]:focus,
+  select:focus {
+    border-color: var(--accent-color) !important;
+  }
+
+  .button,
+  .button.primary,
+  .button.secondary,
+  .button.delete {
+    background-color: var(--accent-color) !important;
+    color: #fff !important;
+  }
+
+  .button.primary {
+    background-color: #1976D2 !important;
+  }
+  .button.primary:hover {
+    background-color: #1565C0 !important;
+  }
+  .button.secondary {
+    background-color: #444 !important;
+  }
+  .button.secondary:hover {
+    background-color: #222 !important;
+  }
+  .button.delete {
+    background-color: var(--error-color) !important;
+  }
+  .button.delete:hover {
+    background-color: #c82333 !important;
+  }
+
+  .save-status {
+    color: var(--success-color) !important;
   }
 }
 

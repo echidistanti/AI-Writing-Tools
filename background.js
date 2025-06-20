@@ -379,75 +379,11 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: (params) => {
-        // Ensure styles are scoped to our container
-        const style = document.createElement('style');
-        style.textContent = `
-          .gpt-helper-result, .gpt-helper-result * {
-            all: initial;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-          }
-        `;
-        document.head.appendChild(style);
-
-        // Get existing window if any
+        // Remove any previous container
         let container = document.querySelector('.gpt-helper-result');
-        
-        // Se la finestra esiste già, aggiungi i nuovi messaggi
-        if (container) {
-          const messagesContainer = container.querySelector('.gpt-helper-messages');
-          // Funzione per aggiungere un messaggio (deve essere duplicata qui se non già globale)
-          function addMessage(content, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `gpt-helper-message ${isUser ? 'user' : 'assistant'}`;
-            const bubble = document.createElement('div');
-            bubble.className = 'gpt-helper-bubble';
-            bubble.innerHTML = content;
-            Object.assign(bubble.style, {
-              padding: '12px 16px',
-              borderRadius: isUser
-                ? '18px 18px 4px 18px'   // User: angolo in basso a sinistra più squadrato
-                : '18px 18px 18px 4px', // Assistant: angolo in basso a destra più squadrato
-              backgroundColor: isUser
-                ? 'var(--gpt-user-bubble-bg)'
-                : 'var(--gpt-bubble-bg)',
-              color: isUser
-                ? 'var(--gpt-user-bubble-text)'
-                : 'var(--gpt-bubble-text)',
-              fontSize: '14px',
-              lineHeight: '1.5',
-              wordBreak: 'break-word',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-              position: 'relative',
-              alignSelf: isUser ? 'flex-end' : 'flex-start',
-              maxWidth: '100%', // Limita la larghezza della bolla
-              minWidth: '40px',
-              display: 'inline-block',
-              whiteSpace: 'pre-line'
-            });
-            messageDiv.appendChild(bubble);
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            return messageDiv;
-          }
-          // Aggiungi i nuovi messaggi se forniti
-          if (params.initialMessage) addMessage(params.initialMessage, true);
-          if (params.initialResponse) addMessage(params.initialResponse, false);
-          else {
-            // Mostra subito il typing indicator
-            const typingIndicator = document.createElement('div');
-            typingIndicator.className = 'gpt-helper-message assistant typing';
-            const typingBubble = document.createElement('div');
-            typingBubble.className = 'gpt-helper-bubble';
-            typingBubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-            typingIndicator.appendChild(typingBubble);
-            messagesContainer.appendChild(typingIndicator);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          }
-          return;
-        }
+        if (container) container.remove();
 
-        // Clean up any overlay
+        // Remove any overlay
         document.querySelectorAll('.gpt-helper-overlay').forEach(el => el.remove());
 
         // Create overlay if enabled
@@ -460,146 +396,62 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           overlay.classList.add('active');
         }
 
-        // Create main container
+        // Main container
         container = document.createElement('div');
         container.className = 'gpt-helper-result';
 
-        // Fixed dimensions and position
-        const width = 400;
-        const height = 600;
-        const padding = 20;
-
-        Object.assign(container.style, {
-          position: 'fixed',
-          top: `${padding}px`,
-          right: `${padding}px`,
-          width: `${width}px`,
-          height: `${height}px`,
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'var(--gpt-bg-color)',
-          borderRadius: '12px',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-          overflow: 'hidden',
-          zIndex: '2147483647',
-          opacity: '1',
-          transform: 'none'
-        });
-
-        // Create header
+        // Header
         const header = document.createElement('div');
-        Object.assign(header.style, {
-          padding: '16px',
-          borderBottom: '1px solid var(--gpt-border-color)',
-          backgroundColor: 'var(--gpt-bg-color)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        });
+        header.className = 'gpt-helper-draghandle';
 
-        // Add title
+        // Title
         const title = document.createElement('div');
+        title.className = 'gpt-helper-title';
         title.textContent = 'GPT Chat';
-        Object.assign(title.style, {
-          fontWeight: '600',
-          fontSize: '14px',
-          color: 'var(--gpt-text-color)'
-        });
 
-        // Add model name (now using params.currentModel)
+        // Model name
         const modelName = document.createElement('div');
         modelName.textContent = `Model: ${params.currentModel}`;
-        Object.assign(modelName.style, {
-          fontSize: '10px',
-          color: '#999',
-          marginLeft: '8px'
-        });
+        modelName.style.fontSize = '10px';
+        modelName.style.color = '#999';
+        modelName.style.marginLeft = '8px';
         title.appendChild(modelName);
 
-        // Add close button
+        // Close button
         const closeButton = document.createElement('button');
+        closeButton.className = 'gpt-helper-close';
         closeButton.innerHTML = '✕';
-        Object.assign(closeButton.style, {
-          border: 'none',
-          background: 'none',
-          color: '#999',
-          fontSize: '16px',
-          cursor: 'pointer',
-          padding: '4px 8px'
-        });
-
         header.appendChild(title);
         header.appendChild(closeButton);
 
-        // Close button handler
         closeButton.addEventListener('click', () => {
-          if (overlay) {
-            overlay.remove();
-          }
+          if (overlay) overlay.remove();
           container.remove();
         });
 
-        // Create messages container
+        // Messages container
         const messagesContainer = document.createElement('div');
         messagesContainer.className = 'gpt-helper-messages';
-        Object.assign(messagesContainer.style, {
-          flex: '1',
-          overflowY: 'auto',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          backgroundColor: 'var(--gpt-bg-color)'
-        });
+        messagesContainer.style.flex = '1';
+        messagesContainer.style.overflowY = 'auto';
+        messagesContainer.style.padding = '20px';
+        messagesContainer.style.display = 'flex';
+        messagesContainer.style.flexDirection = 'column';
+        messagesContainer.style.gap = '16px';
 
-        // Function to add a message
+        // Add initial messages if provided
         function addMessage(content, isUser = false) {
           const messageDiv = document.createElement('div');
           messageDiv.className = `gpt-helper-message ${isUser ? 'user' : 'assistant'}`;
-          Object.assign(messageDiv.style, {
-            maxWidth: '85%',
-            alignSelf: isUser ? 'flex-end' : 'flex-start',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px'
-          });
 
           const bubble = document.createElement('div');
           bubble.className = 'gpt-helper-bubble';
           bubble.innerHTML = content;
-          Object.assign(bubble.style, {
-            padding: '12px 16px',
-            borderRadius: isUser
-              ? '18px 18px 4px 18px'
-              : '18px 18px 18px 4px',
-            backgroundColor: isUser
-              ? 'var(--gpt-user-bubble-bg)'
-              : 'var(--gpt-bubble-bg)',
-            color: isUser
-              ? 'var(--gpt-user-bubble-text)'
-              : 'var(--gpt-bubble-text)',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            wordBreak: 'break-word',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-            position: 'relative',
-            alignSelf: isUser ? 'flex-end' : 'flex-start',
-            maxWidth: '100%',
-            minWidth: '40px',
-            display: 'inline-block',
-            whiteSpace: 'pre-line'
-          });
 
-          // Add time stamp
+          // timestamp
           const timestamp = document.createElement('div');
           timestamp.className = 'gpt-helper-timestamp';
           timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          Object.assign(timestamp.style, {
-            fontSize: '11px',
-            color: '#999',
-            marginLeft: isUser ? 'auto' : '4px',
-            marginRight: isUser ? '4px' : 'auto'
-          });
 
           messageDiv.appendChild(bubble);
           messageDiv.appendChild(timestamp);
@@ -608,13 +460,12 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           return messageDiv;
         }
 
-        // Add initial messages if provided
         if (params.initialMessage) {
           addMessage(params.initialMessage, true);
           if (params.initialResponse) {
             addMessage(params.initialResponse, false);
           } else {
-            // Mostra subito il typing indicator
+            // Typing indicator
             const typingIndicator = document.createElement('div');
             typingIndicator.className = 'gpt-helper-message assistant typing';
             const typingBubble = document.createElement('div');
@@ -626,70 +477,23 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           }
         }
 
-        // Create input container
+        // Input container
         const inputContainer = document.createElement('div');
-        inputContainer.className = 'gpt-helper-input-container';
-        Object.assign(inputContainer.style, {
-          padding: '16px',
-          borderTop: '1px solid var(--gpt-border-color)',
-          display: 'flex',
-          gap: '12px',
-          backgroundColor: 'var(--gpt-bg-color)'
-        });
+        inputContainer.className = 'gpt-helper-actions';
 
         const textarea = document.createElement('textarea');
         textarea.className = 'gpt-helper-textarea';
         textarea.placeholder = params.i18n.chatPlaceholder;
         textarea.rows = 1;
-        Object.assign(textarea.style, {
-          flex: '1',
-          border: '1px solid var(--gpt-border-color)',
-          borderRadius: '24px',
-          padding: '12px 16px',
-          resize: 'none',
-          fontSize: '14px',
-          lineHeight: '1.5',
-          fontFamily: 'inherit',
-          backgroundColor: 'var(--gpt-input-bg)',
-          color: 'var(--gpt-input-text)',
-          outline: 'none'
-        });
-
-        // Add hover and focus styles for textarea
-        textarea.addEventListener('mouseover', () => {
-          textarea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-        });
-
-        textarea.addEventListener('mouseout', () => {
-          if (document.activeElement !== textarea) {
-            textarea.style.borderColor = 'var(--gpt-border-color)';
-          }
-        });
-
-        textarea.addEventListener('focus', () => {
-          textarea.style.borderColor = 'var(--gpt-primary-color)';
-        });
-
-        textarea.addEventListener('blur', () => {
-          textarea.style.borderColor = 'var(--gpt-border-color)';
-        });
 
         const copyButton = document.createElement('button');
         copyButton.className = 'gpt-helper-button copy';
         copyButton.innerHTML = '📋';
-        Object.assign(copyButton.style, {
-          border: 'none',
-          background: 'none',
-          fontSize: '20px',
-          cursor: 'pointer',
-          padding: '8px',
-          color: '#999'
-        });
 
         inputContainer.appendChild(textarea);
         inputContainer.appendChild(copyButton);
 
-        // Handle message sending
+        // Send message logic
         async function sendMessage() {
           const message = textarea.value.trim();
           if (!message) return;
@@ -698,48 +502,12 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           textarea.value = '';
           textarea.style.height = 'auto';
 
-          // Show typing indicator
+          // Typing indicator
           const typingIndicator = document.createElement('div');
           typingIndicator.className = 'gpt-helper-message assistant typing';
-          Object.assign(typingIndicator.style, {
-            maxWidth: '80%',
-            alignSelf: 'flex-start'
-          });
-
           const typingBubble = document.createElement('div');
           typingBubble.className = 'gpt-helper-bubble';
           typingBubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-          Object.assign(typingBubble.style, {
-            padding: '12px 16px',
-            borderRadius: '18px 18px 18px 4px',
-            backgroundColor: 'var(--gpt-bubble-bg)',
-            display: 'inline-flex',
-            gap: '4px',
-            alignItems: 'center'
-          });
-
-          // Add dot animation styles
-          const dots = typingBubble.querySelectorAll('.dot');
-          dots.forEach((dot, index) => {
-            Object.assign(dot.style, {
-              width: '6px',
-              height: '6px',
-              backgroundColor: 'var(--gpt-bubble-text)',
-              borderRadius: '50%',
-              animation: `dotPulse 1s infinite ${index * 0.2}s`
-            });
-          });
-
-          // Add animation keyframes
-          const style = document.createElement('style');
-          style.textContent = `
-            @keyframes dotPulse {
-              0%, 100% { transform: scale(1); opacity: 0.4; }
-              50% { transform: scale(1.2); opacity: 1; }
-            }
-          `;
-          document.head.appendChild(style);
-
           typingIndicator.appendChild(typingBubble);
           messagesContainer.appendChild(typingIndicator);
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -762,7 +530,6 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           }
         }
 
-        // Setup event handlers
         textarea.addEventListener('input', function() {
           this.style.height = 'auto';
           this.style.height = Math.min(this.scrollHeight, 120) + 'px';
@@ -782,7 +549,7 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
             navigator.clipboard.writeText(lastMessage)
               .then(() => {
                 this.innerHTML = '✓';
-                // Add a success message
+                // Success message
                 const successMessage = document.createElement('div');
                 successMessage.style.position = 'absolute';
                 successMessage.style.right = '50px';
@@ -794,8 +561,7 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
                 successMessage.style.fontSize = '14px';
                 successMessage.textContent = 'Copiato!';
                 inputContainer.appendChild(successMessage);
-                
-                // Close window after 500ms
+
                 setTimeout(() => {
                   if (overlay) {
                     overlay.classList.remove('active');
@@ -805,7 +571,6 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
                 }, 500);
               })
               .catch(err => {
-                console.error('Copy failed:', err);
                 alert(params.i18n.errorCopying);
               });
           }
@@ -816,7 +581,6 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
         container.appendChild(messagesContainer);
         container.appendChild(inputContainer);
 
-        // Add container to page
         document.body.appendChild(container);
         textarea.focus();
       },
@@ -824,7 +588,7 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
         overlayEnabled,
         initialMessage: initialMessage,
         initialResponse: initialResponse,
-        currentModel: currentModel, // Pass the model info through args
+        currentModel: currentModel,
         i18n: {
           chatPlaceholder: chrome.i18n.getMessage('chatPlaceholder'),
           errorCopying: chrome.i18n.getMessage('errorCopying')
