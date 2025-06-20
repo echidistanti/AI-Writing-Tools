@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI Writing Tools", 
   "description": "A simplified writing tool extension in plain english.",
-  "version": "1.0",
+  "version": "1.1.0",
   "permissions": [
     "storage",
     "contextMenus",
