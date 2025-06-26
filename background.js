@@ -425,8 +425,12 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
         header.appendChild(closeButton);
 
         closeButton.addEventListener('click', () => {
-          if (overlay) overlay.remove();
+          if (overlay) {
+            overlay.remove();
+          }
           container.remove();
+          // Notifica il background che la finestra è stata chiusa
+          chrome.runtime.sendMessage({ action: 'resetChatContext' });
         });
 
         // Messages container
@@ -601,4 +605,10 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
   }
 }
 
-// Function to remove the chat window
+// Listener per resettare il contesto chat quando la finestra viene chiusa
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'resetChatContext') {
+    chrome.storage.local.remove('chatHistory');
+    return;
+  }
+});
