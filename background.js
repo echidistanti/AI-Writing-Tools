@@ -580,6 +580,22 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           }
         });
 
+        // Ensure styles are scoped to our container
+        const style = document.createElement('style');
+        style.textContent = `
+          .gpt-helper-result {
+            all: initial;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          }
+          .gpt-helper-result * {
+            box-sizing: border-box;
+            font-family: inherit;
+            /* avoid resetting user-select or pointer-events here */
+          }
+        `;
+        document.head.appendChild(style);
+
         // Assemble and add to page
         container.appendChild(header);
         container.appendChild(messagesContainer);
