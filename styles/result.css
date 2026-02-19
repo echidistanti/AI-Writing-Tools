@@ -3,6 +3,7 @@
   all: revert;
   position: fixed;
   top: 20px;
+  left: auto;
   right: 20px;
   width: 30vw;
   min-width: 300px;

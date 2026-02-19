@@ -391,8 +391,31 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
             overlay.remove();
           }
           container.remove();
-          // Notifica il background che la finestra è stata chiusa
           chrome.runtime.sendMessage({ action: 'resetChatContext' });
+        });
+
+        // Drag functionality
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        header.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          dragOffsetX = e.clientX - container.offsetLeft;
+          dragOffsetY = e.clientY - container.offsetTop;
+          header.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          container.style.left = (e.clientX - dragOffsetX) + 'px';
+          container.style.top = (e.clientY - dragOffsetY) + 'px';
+          container.style.right = 'auto';
+        });
+
+        document.addEventListener('mouseup', () => {
+          isDragging = false;
+          header.style.cursor = 'move';
         });
 
         // Messages container
