@@ -4,6 +4,8 @@ const CONFIG = {
   TOKEN_RATIO: 4,
 };
 
+const DEFAULT_MODEL = 'gpt-3.5-turbo';
+
 // Extension state
 let state = {
   apiKey: '',
@@ -20,15 +22,13 @@ async function loadConfig() {
       'apiKey', 
       'apiEndpoint',
       'selectedModel', 
-      'availableModels',
       'customPrompts'
     ]);
     
     state = {
       apiKey: result.apiKey || '',
       apiEndpoint: result.apiEndpoint || '',
-      selectedModel: result.selectedModel || '',
-      availableModels: Array.isArray(result.availableModels) ? result.availableModels : [],
+      selectedModel: result.selectedModel || DEFAULT_MODEL,
       prompts: Array.isArray(result.customPrompts) ? result.customPrompts : []
     };
   } catch (error) {
@@ -38,8 +38,6 @@ async function loadConfig() {
 
 // Create context menus
 function createContextMenus() {
-  console.log('Creating context menus with prompts:', state.prompts);
-  
   chrome.contextMenus.removeAll(() => {
     // Create main menu
     chrome.contextMenus.create({
@@ -80,20 +78,17 @@ function createContextMenus() {
 
 // Initialize extension
 chrome.runtime.onInstalled.addListener(async () => {
-  console.log('Extension installed/updated');
   await loadConfig();
   createContextMenus();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  console.log('Extension started');
   await loadConfig();
   createContextMenus();
 });
 
 // Handle storage changes
 chrome.storage.onChanged.addListener((changes, area) => {
-  console.log('Storage changed:', changes, area);
   if (area === 'sync') {
     if (changes.apiKey) state.apiKey = changes.apiKey.newValue;
     if (changes.selectedModel) state.selectedModel = changes.selectedModel.newValue;
@@ -104,10 +99,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-// Handle messages from other parts of the extension
+// Handle config reload messages
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.action === 'reloadConfig') {
-    console.log('Reloading configuration...');
     await loadConfig();
     createContextMenus();
     sendResponse({ success: true });
@@ -147,7 +141,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 function buildChatCompletionsUrl(apiEndpoint) {
-  let base = apiEndpoint.trim().replace(/\/+$/, '');
+  const base = apiEndpoint.trim().replace(/\/+$/, '');
   return `${base}/chat/completions`;
 }
 
@@ -157,11 +151,9 @@ async function processText(text, promptText, tab) {
   if (!validateInput(text, tab)) return;
 
   try {
-    // Mostra subito la chat window con il prompt e senza risposta
     await showChatWindow(tab, `${promptText}\n\n${text}`, null);
 
     const url = buildChatCompletionsUrl(state.apiEndpoint);
-    console.log('Making API request to:', url);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -188,11 +180,6 @@ async function processText(text, promptText, tab) {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('API Error:', {
-        status: response.status,
-        url,
-        error: errorBody
-      });
       throw new Error(`API request failed (${response.status}): ${errorBody}`);
     }
 
@@ -279,23 +266,10 @@ async function showAlert(tab, message) {
 
 // Handle extension icon click
 chrome.action.onClicked.addListener(async (tab) => {
-  // Instead of opening options page, show chat window
   await showChatWindow(tab, '', '');
 });
 
-// Show loading window
-async function showLoadingWindow(tab) {
-  // The loading state will be handled within the chat window
-  return;
-}
-
-// Show result
-async function showResult(originalText, resultText, tab) {
-  // Non fare nulla qui, la risposta è già stata mostrata
-  return;
-}
-
-// Rimuovi il vecchio listener e sostituiscilo con questo
+// Handle chat message
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'chat') {
     (async () => {
@@ -330,24 +304,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         if (!response.ok) {
           const errorBody = await response.text();
-          console.error('Chat API Error:', {
-            status: response.status,
-            url,
-            error: errorBody
-          });
           throw new Error(`API request failed (${response.status}): ${errorBody}`);
         }
 
         const result = await response.json();
         const assistantMessage = result.choices[0].message.content;
 
-        // Update chat history
+        // Keep only last 10 pairs of messages
         chatHistory.push(
           { role: 'user', content: request.message },
           { role: 'assistant', content: assistantMessage }
         );
-
-        // Keep only last 10 pairs of messages
         if (chatHistory.length > 20) {
           chatHistory.splice(0, 2);
         }
@@ -355,7 +322,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         await chrome.storage.local.set({ chatHistory });
         sendResponse({ message: assistantMessage });
       } catch (error) {
-        console.error('Chat error:', error);
         sendResponse({ error: error.message });
       }
     })();
@@ -379,12 +345,8 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: (params) => {
-        // Remove any previous container
-        let container = document.querySelector('.gpt-helper-result');
-        if (container) container.remove();
-
-        // Remove any overlay
-        document.querySelectorAll('.gpt-helper-overlay').forEach(el => el.remove());
+        // Remove any previous container and overlay
+        document.querySelectorAll('.gpt-helper-result, .gpt-helper-overlay').forEach(el => el.remove());
 
         // Create overlay if enabled
         let overlay = null;
@@ -392,7 +354,7 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           overlay = document.createElement('div');
           overlay.className = 'gpt-helper-overlay';
           document.body.appendChild(overlay);
-          overlay.offsetHeight; // Force reflow
+          void overlay.offsetHeight; // Force reflow
           overlay.classList.add('active');
         }
 
@@ -616,15 +578,13 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
       }]
     });
   } catch (error) {
-    console.error('Error showing chat window:', error);
     showAlert(tab, `Error showing chat window: ${error.message}`);
   }
 }
 
-// Listener per resettare il contesto chat quando la finestra viene chiusa
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+// Handle chat context reset
+chrome.runtime.onMessage.addListener((request) => {
   if (request.action === 'resetChatContext') {
     chrome.storage.local.remove('chatHistory');
-    return;
   }
 });

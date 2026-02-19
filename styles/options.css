@@ -70,13 +70,13 @@
 
   .table th,
   .table td {
-    color: var(--text-primary) !important;
-    border-color: var(--border-color) !important;
-    background: none !important;
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    background: none;
   }
 
   .table tr:hover {
-    background-color: #23272b !important;
+    background-color: #23272b;
   }
 
   .prompt-text-input,
@@ -85,9 +85,9 @@
   input[type="url"],
   input[type="number"],
   select {
-    background-color: var(--input-background) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--border-color) !important;
+    background-color: var(--input-background);
+    color: var(--text-primary);
+    border-color: var(--border-color);
   }
 
   .prompt-text-input:focus,
@@ -96,38 +96,38 @@
   input[type="url"]:focus,
   input[type="number"]:focus,
   select:focus {
-    border-color: var(--accent-color) !important;
+    border-color: var(--accent-color);
   }
 
   .button,
   .button.primary,
   .button.secondary,
   .button.delete {
-    background-color: var(--accent-color) !important;
-    color: #fff !important;
+    background-color: var(--accent-color);
+    color: #fff;
   }
 
   .button.primary {
-    background-color: #1976D2 !important;
+    background-color: #1976D2;
   }
   .button.primary:hover {
-    background-color: #1565C0 !important;
+    background-color: #1565C0;
   }
   .button.secondary {
-    background-color: #444 !important;
+    background-color: #444;
   }
   .button.secondary:hover {
-    background-color: #222 !important;
+    background-color: #222;
   }
   .button.delete {
-    background-color: var(--error-color) !important;
+    background-color: var(--error-color);
   }
   .button.delete:hover {
-    background-color: #c82333 !important;
+    background-color: #c82333;
   }
 
   .save-status {
-    color: var(--success-color) !important;
+    color: var(--success-color);
   }
 }
 
@@ -458,7 +458,7 @@ select:focus,
 /* Delete button */
 .delete {
   background-color: var(--error-color);
-  color: #fff !important; /* label bianca */
+  color: #fff;
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
@@ -471,7 +471,7 @@ select:focus,
 
 .delete:hover {
   background-color: #c82333;
-  color: #fff !important;
+  color: #fff;
 }
 
 /* Button groups */
@@ -499,12 +499,12 @@ select:focus,
   border: none;
   border-radius: 6px;
   background-color: var(--accent-color);
-  color: #fff !important;
+  color: #fff;
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
   transition: background-color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
   outline: none;
   appearance: none;
 }
