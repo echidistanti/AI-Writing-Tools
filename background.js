@@ -368,32 +368,28 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           chrome.runtime.sendMessage({ action: 'resetChatContext' });
         });
 
-        // Drag functionality with temporary listeners that are removed after each drag
+        // Drag functionality - use persistent listeners that check state
         let isDragging = false;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
-
-        function onMouseMove(e) {
-          if (!isDragging) return;
-          container.style.left = (e.clientX - dragOffsetX) + 'px';
-          container.style.top = (e.clientY - dragOffsetY) + 'px';
-          container.style.right = 'auto';
-        }
-
-        function onMouseUp() {
-          isDragging = false;
-          header.style.cursor = 'move';
-          window.removeEventListener('mousemove', onMouseMove);
-          window.removeEventListener('mouseup', onMouseUp);
-        }
 
         header.addEventListener('mousedown', (e) => {
           isDragging = true;
           dragOffsetX = e.clientX - container.offsetLeft;
           dragOffsetY = e.clientY - container.offsetTop;
           header.style.cursor = 'grabbing';
-          window.addEventListener('mousemove', onMouseMove);
-          window.addEventListener('mouseup', onMouseUp);
+          // Override CSS !important with setProperty
+          container.style.setProperty('right', 'auto', 'important');
+          container.style.setProperty('left', container.offsetLeft + 'px', 'important');
+        });
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          container.style.setProperty('left', (e.clientX - dragOffsetX) + 'px', 'important');
+          container.style.setProperty('top', (e.clientY - dragOffsetY) + 'px', 'important');
+        });
+        document.addEventListener('mouseup', () => {
+          isDragging = false;
+          header.style.cursor = 'move';
         });
 
         // Messages container
