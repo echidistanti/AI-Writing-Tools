@@ -15,26 +15,25 @@ let state = {
   prompts: []
 };
 
-// Load configuration
+// Load configuration (called on init or when storage changes)
 async function loadConfig() {
   try {
     const result = await chrome.storage.sync.get([
-      'apiKey', 
+      'apiKey',
       'apiEndpoint',
-      'selectedModel', 
+      'selectedModel',
       'customPrompts'
     ]);
-    
-    state = {
-      apiKey: result.apiKey || '',
-      apiEndpoint: result.apiEndpoint || '',
-      selectedModel: result.selectedModel || DEFAULT_MODEL,
-      prompts: Array.isArray(result.customPrompts) ? result.customPrompts : []
-    };
+
+    // Only update values if they are different to avoid unnecessary re-renders
+    state.apiKey = result.apiKey || '';
+    state.apiEndpoint = result.apiEndpoint || '';
+    state.selectedModel = result.selectedModel || DEFAULT_MODEL;
+    state.prompts = Array.isArray(result.customPrompts) ? result.customPrompts : [];
   } catch (error) {
     console.error('Error loading configuration:', error);
   }
-}
+} 
 
 // Create context menus
 function createContextMenus() {
@@ -83,19 +82,18 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  await loadConfig();
-  createContextMenus();
-});
+  // state should already be populated from last session, but refresh anyway
+  if (area !== 'sync') return;
 
-// Handle storage changes
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'sync') {
-    if (changes.apiKey) state.apiKey = changes.apiKey.newValue;
-    if (changes.selectedModel) state.selectedModel = changes.selectedModel.newValue;
-    if (changes.customPrompts) {
-      state.prompts = changes.customPrompts.newValue;
-      createContextMenus();
-    }
+  // Instead of calling loadConfig for everything, update only the changed pieces.
+  if (changes.apiKey) state.apiKey = changes.apiKey.newValue || '';
+  if (changes.selectedModel) state.selectedModel = changes.selectedModel.newValue || DEFAULT_MODEL;
+
+  if (changes.customPrompts) {
+    state.prompts = Array.isArray(changes.customPrompts.newValue)
+      ? changes.customPrompts.newValue
+      : [];
+    createContextMenus();
   }
 });
 
@@ -109,10 +107,12 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   return true;
 });
 
-// Keep alive mechanism
+// Keep-alive mechanism for Manifest v3 service worker. 5 minutes is sufficient
+// (originally 20s, which can be wasteful).
 setInterval(() => {
   chrome.runtime.getPlatformInfo(() => {});
-}, 20000);
+}, 5 * 60 * 1000);
+
 
 // Handle menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -147,7 +147,7 @@ function buildChatCompletionsUrl(apiEndpoint) {
 
 // Process text with the configured API
 async function processText(text, promptText, tab) {
-  await loadConfig();
+  // state is kept up-to-date via listeners, avoid loading each time
   if (!validateInput(text, tab)) return;
 
   try {
@@ -186,53 +186,12 @@ async function processText(text, promptText, tab) {
     const result = await response.json();
     const generatedText = result.choices[0].message.content;
 
-    // Aggiorna la finestra con la risposta dell'AI
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (responseText) => {
-        const container = document.querySelector('.gpt-helper-result');
-        if (!container) return;
-        const messagesContainer = container.querySelector('.gpt-helper-messages');
-        // Rimuovi eventuale typing indicator
-        const typing = messagesContainer.querySelector('.gpt-helper-message.assistant.typing');
-        if (typing) typing.remove();
-        // Aggiungi la risposta dell'AI
-        function addMessage(content, isUser = false) {
-          const messageDiv = document.createElement('div');
-          messageDiv.className = `gpt-helper-message ${isUser ? 'user' : 'assistant'}`;
-          const bubble = document.createElement('div');
-          bubble.className = 'gpt-helper-bubble';
-          bubble.innerHTML = content;
-          Object.assign(bubble.style, {
-            padding: '12px 16px',
-            borderRadius: isUser
-              ? '18px 18px 4px 18px'   // User: angolo in basso a sinistra più squadrato
-              : '18px 18px 18px 4px', // Assistant: angolo in basso a destra più squadrato
-            backgroundColor: isUser
-              ? 'var(--gpt-user-bubble-bg)'
-              : 'var(--gpt-bubble-bg)',
-            color: isUser
-              ? 'var(--gpt-user-bubble-text)'
-              : 'var(--gpt-bubble-text)',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            wordBreak: 'break-word',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
-            position: 'relative',
-            alignSelf: isUser ? 'flex-end' : 'flex-start',
-            maxWidth: '100%', // Limita la larghezza della bolla
-            minWidth: '40px',
-            display: 'inline-block',
-            whiteSpace: 'pre-line'
-          });
-          messageDiv.appendChild(bubble);
-          // timestamp opzionale
-          messagesContainer.appendChild(messageDiv);
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        addMessage(responseText, false);
-      },
-      args: [generatedText]
+    // Notify content script to append the assistant's response (cheaper than injecting code)
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'appendChatResponse',
+      responseText: generatedText
+    }).catch(() => {
+      // ignore errors if the page doesn't have the listener yet
     });
 
   } catch (error) {
@@ -335,10 +294,21 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
     // Get current state before injecting script
     const currentModel = state.selectedModel || DEFAULT_MODEL;
 
-    await chrome.scripting.insertCSS({
+    // inject style only once per page/tab using a flag in session storage
+    const alreadyInjected = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ['styles/result.css']
+      func: () => !!window.__gptHelperCssInjected
     });
+    if (!alreadyInjected[0].result) {
+      await chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ['styles/result.css']
+      });
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => { window.__gptHelperCssInjected = true; }
+      });
+    }
 
     const { overlayEnabled = true } = await chrome.storage.local.get(['overlayEnabled']);
 
@@ -394,28 +364,32 @@ async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
           chrome.runtime.sendMessage({ action: 'resetChatContext' });
         });
 
-        // Drag functionality
+        // Drag functionality with temporary listeners that are removed after each drag
         let isDragging = false;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
+
+        function onMouseMove(e) {
+          if (!isDragging) return;
+          container.style.left = (e.clientX - dragOffsetX) + 'px';
+          container.style.top = (e.clientY - dragOffsetY) + 'px';
+          container.style.right = 'auto';
+        }
+
+        function onMouseUp() {
+          isDragging = false;
+          header.style.cursor = 'move';
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+        }
 
         header.addEventListener('mousedown', (e) => {
           isDragging = true;
           dragOffsetX = e.clientX - container.offsetLeft;
           dragOffsetY = e.clientY - container.offsetTop;
           header.style.cursor = 'grabbing';
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          container.style.left = (e.clientX - dragOffsetX) + 'px';
-          container.style.top = (e.clientY - dragOffsetY) + 'px';
-          container.style.right = 'auto';
-        });
-
-        document.addEventListener('mouseup', () => {
-          isDragging = false;
-          header.style.cursor = 'move';
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
         });
 
         // Messages container

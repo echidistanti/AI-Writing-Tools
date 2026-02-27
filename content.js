@@ -18,3 +18,25 @@ document.addEventListener('mouseup', () => {
         }).catch(() => { /* Ignore errors */ });
     }
 });
+
+// allow background to append response messages without reinjecting code
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.action === 'appendChatResponse') {
+        const responseText = msg.responseText;
+        const container = document.querySelector('.gpt-helper-result');
+        if (!container) return;
+        const messagesContainer = container.querySelector('.gpt-helper-messages');
+        // remove typing indicator if present
+        const typing = messagesContainer.querySelector('.gpt-helper-message.assistant.typing');
+        if (typing) typing.remove();
+        // add message
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'gpt-helper-message assistant';
+        const bubble = document.createElement('div');
+        bubble.className = 'gpt-helper-bubble';
+        bubble.innerHTML = responseText;
+        messageDiv.appendChild(bubble);
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+});
