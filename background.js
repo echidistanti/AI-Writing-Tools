@@ -147,7 +147,8 @@ function buildChatCompletionsUrl(apiEndpoint) {
 
 // Process text with the configured API
 async function processText(text, promptText, tab) {
-  // state is kept up-to-date via listeners, avoid loading each time
+  // ensure state is current (service worker may have restarted)
+  await loadConfig();
   if (!validateInput(text, tab)) return;
 
   try {
@@ -162,7 +163,7 @@ async function processText(text, promptText, tab) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: state.selectedModel,
+        model: state.selectedModel || DEFAULT_MODEL,
         messages: [
           {
             role: 'system',
@@ -233,6 +234,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'chat') {
     (async () => {
       try {
+        // service worker might be cold; refresh config
+        await loadConfig();
         const { chatHistory = [] } = await chrome.storage.local.get(['chatHistory']);
         const url = buildChatCompletionsUrl(state.apiEndpoint);
 
@@ -254,7 +257,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: state.selectedModel,
+            model: state.selectedModel || DEFAULT_MODEL,
             messages: messages,
             temperature: 0.7,
             max_tokens: CONFIG.MAX_TOKENS
@@ -291,6 +294,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Unified chat window implementation
 async function showChatWindow(tab, initialMessage = '', initialResponse = '') {
   try {
+    await loadConfig(); // make sure we show the correct model when window appears
     // Get current state before injecting script
     const currentModel = state.selectedModel || DEFAULT_MODEL;
 
